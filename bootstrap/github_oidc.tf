@@ -115,8 +115,8 @@ resource "aws_iam_role_policy" "plan_state" {
 
 data "aws_iam_policy_document" "apply" {
   statement {
-    sid     = "ProjectBuckets"
-    actions = ["s3:*"]
+    sid       = "ProjectBuckets"
+    actions   = ["s3:*"]
     resources = [
       local.project_arn_s3,
       "${local.project_arn_s3}/*",
@@ -133,7 +133,7 @@ data "aws_iam_policy_document" "apply" {
 
   # Nur Rollen mit Projektpräfix (z. B. die Rolle für die S3-Replikation)
   statement {
-    sid = "ProjectRoles"
+    sid     = "ProjectRoles"
     actions = [
       "iam:CreateRole",
       "iam:DeleteRole",
