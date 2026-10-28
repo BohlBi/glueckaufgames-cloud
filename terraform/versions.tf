@@ -8,9 +8,9 @@ terraform {
     }
   }
 
-  # State-Bucket aus bootstrap/ (Ausgabe "state_bucket")
+  # Der Bucket kommt beim init dazu (Ausgabe "state_bucket" aus bootstrap/):
+  # terraform init -backend-config="bucket=<state_bucket>"
   backend "s3" {
-    bucket       = "glueckaufgames-tfstate-045246058962"
     key          = "website/terraform.tfstate"
     region       = "eu-central-1"
     encrypt      = true

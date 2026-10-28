@@ -4,7 +4,7 @@
 
 ```
 bootstrap/            einmalig: State-Bucket und OIDC-Rollen
-terraform/            Infrastruktur der Website
+terraform/            Infrastruktur und Inhalte der Website
   modules/storage/    S3-Buckets und Replikation
   modules/cdn/        CloudFront, OAC, Security-Header, Bucket-Richtlinien
   modules/monitoring/ Budget und CloudWatch-Alarm
@@ -14,29 +14,41 @@ website/              Inhalte der Website
 
 ## Installation
 
-Voraussetzungen: AWS-Konto, AWS CLI v2 (angemeldet, z. B. per `aws sso login`), Terraform ≥ 1.11, GitHub-Repository.
+Voraussetzungen: AWS-Konto, AWS CLI v2 (angemeldet, z. B. per `aws sso login`), Terraform ≥ 1.11, Git.
 
-1. **Bootstrap ausführen** (siehe `bootstrap/README.md`):
+1. **Repository klonen**
+   ```bash
+   git clone https://github.com/BohlBi/glueckaufgames-cloud.git
+   cd glueckaufgames-cloud
+   ```
+
+2. **Bootstrap ausführen** (legt den State-Bucket an)
    ```bash
    cd bootstrap
-   terraform init && terraform apply
-   terraform output
+   terraform init
+   terraform apply
+   cd ..
    ```
-2. **Backend eintragen:** den Wert `state_bucket` in `terraform/versions.tf` bei `bucket` eintragen.
 
-## Lokal ausführen 
+3. **Infrastruktur und Website bereitstellen**
+   ```bash
+   cd terraform
+   terraform init -backend-config="bucket=$(terraform -chdir=../bootstrap output -raw state_bucket)"
+   terraform apply -var="alert_email=name@example.com"
+   ```
+   CloudFront braucht beim ersten Mal 5–15 Minuten.
 
-```bash
-cd terraform
-export TF_VAR_alert_email="name@example.com"
-terraform init
-terraform plan
-```
+4. **Website aufrufen**
+   ```bash
+   terraform output website_url
+   ```
+
+5. **E-Mail von AWS SNS bestätigen** („Confirm subscription“), damit die Alarme ankommen.
 
 ## Abbauen
 
 ```bash
-cd terraform && terraform destroy
+cd terraform && terraform destroy -var="alert_email=name@example.com"
 ```
 
 Der Bootstrap ist mit `prevent_destroy` geschützt und muss bei Bedarf gesondert entfernt werden.

@@ -70,7 +70,7 @@ jobs:
 
       - name: terraform plan
         run: |
-          terraform init -input=false
+          terraform init -input=false -backend-config="bucket=glueckaufgames-tfstate-$(aws sts get-caller-identity --query Account --output text)"
           terraform plan -input=false -no-color | tee plan.txt
           {
             echo '## terraform plan'
@@ -80,7 +80,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
-    name: terraform apply und Upload
+    name: terraform apply
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: checks
     runs-on: ubuntu-latest
@@ -100,14 +100,10 @@ jobs:
       - name: terraform apply
         working-directory: terraform
         run: |
-          terraform init -input=false
+          terraform init -input=false -backend-config="bucket=glueckaufgames-tfstate-$(aws sts get-caller-identity --query Account --output text)"
           terraform apply -input=false -auto-approve
-          echo "BUCKET=$(terraform output -raw primary_bucket)" >> "$GITHUB_ENV"
           echo "DISTRIBUTION_ID=$(terraform output -raw distribution_id)" >> "$GITHUB_ENV"
           echo "WEBSITE_URL=$(terraform output -raw website_url)" >> "$GITHUB_ENV"
-
-      - name: Website hochladen
-        run: aws s3 sync website/ "s3://${BUCKET}" --delete
 
       - name: Cache-Invalidierung
         run: aws cloudfront create-invalidation --distribution-id "${DISTRIBUTION_ID}" --paths "/*"
