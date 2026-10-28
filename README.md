@@ -3,7 +3,7 @@
 ## Aufbau
 
 ```
-bootstrap/            einmalig: State-Bucket und OIDC-Rollen
+bootstrap/            State-Bucket und OIDC-Rollen
 terraform/            Infrastruktur der Website
   modules/storage/    S3-Buckets und Replikation
   modules/cdn/        CloudFront, OAC, Security-Header, Bucket-Richtlinien
@@ -14,7 +14,7 @@ website/              Inhalte der Website
 
 ## Installation
 
-Voraussetzungen: AWS-Konto, AWS CLI v2 (angemeldet, z. B. per `aws sso login`), Terraform ≥ 1.11, GitHub-Repository.
+Voraussetzungen: AWS-Konto, AWS CLI v2 (angemeldet, z. B. per `aws sso login`), Terraform ≥ 1.11
 
 1. **Bootstrap ausführen** (siehe `bootstrap/README.md`):
    ```bash
