@@ -3,8 +3,8 @@
 ## Aufbau
 
 ```
-bootstrap/            einmalig: State-Bucket und OIDC-Rollen
-terraform/            Infrastruktur und Inhalte der Website
+bootstrap/            State-Bucket und OIDC-Rollen
+terraform/            Infrastruktur der Website
   modules/storage/    S3-Buckets und Replikation
   modules/cdn/        CloudFront, OAC, Security-Header, Bucket-Richtlinien
   modules/monitoring/ Budget und CloudWatch-Alarm
@@ -14,7 +14,7 @@ website/              Inhalte der Website
 
 ## Installation
 
-Voraussetzungen: AWS-Konto, AWS CLI v2 (angemeldet, z. B. per `aws sso login`), Terraform ≥ 1.11, Git.
+Voraussetzungen: AWS-Konto, AWS CLI v2 (angemeldet, z. B. per `aws sso login`), Terraform ≥ 1.11
 
 1. **Repository klonen**
    ```bash
