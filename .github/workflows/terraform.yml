@@ -113,4 +113,5 @@ jobs:
         run: aws cloudfront create-invalidation --distribution-id "${DISTRIBUTION_ID}" --paths "/*"
 
       - name: Adresse ausgeben
-        run: echo "Website: ${WEBSITE_URL}" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Website: ${WEBSITE_URL}" >> "$GITHUB_STEP_SUMMARY"

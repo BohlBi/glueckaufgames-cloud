@@ -12,6 +12,11 @@ locals {
   github_oidc_url = "token.actions.githubusercontent.com"
   name_prefix     = var.project
   project_arn_s3  = "arn:aws:s3:::${var.project}-*"
+
+  # Seit Juli 2026 enthält das Subject bei neuen Repositorys die
+  # unveränderlichen IDs von Konto und Repository. Ein umbenanntes oder neu
+  # angelegtes Repository mit gleichem Namen erhält so keinen Zugriff.
+  github_subject = "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repository}@${var.github_repository_id}"
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
@@ -40,7 +45,7 @@ data "aws_iam_policy_document" "trust_plan" {
     condition {
       test     = "StringEquals"
       variable = "${local.github_oidc_url}:sub"
-      values   = ["repo:${var.github_repository}:pull_request"]
+      values   = ["${local.github_subject}:pull_request"]
     }
   }
 }
@@ -64,7 +69,7 @@ data "aws_iam_policy_document" "trust_apply" {
     condition {
       test     = "StringEquals"
       variable = "${local.github_oidc_url}:sub"
-      values   = ["repo:${var.github_repository}:ref:refs/heads/${var.github_default_branch}"]
+      values   = ["${local.github_subject}:ref:refs/heads/${var.github_default_branch}"]
     }
   }
 }
@@ -115,8 +120,8 @@ resource "aws_iam_role_policy" "plan_state" {
 
 data "aws_iam_policy_document" "apply" {
   statement {
-    sid       = "ProjectBuckets"
-    actions   = ["s3:*"]
+    sid     = "ProjectBuckets"
+    actions = ["s3:*"]
     resources = [
       local.project_arn_s3,
       "${local.project_arn_s3}/*",
@@ -133,7 +138,7 @@ data "aws_iam_policy_document" "apply" {
 
   # Nur Rollen mit Projektpräfix (z. B. die Rolle für die S3-Replikation)
   statement {
-    sid     = "ProjectRoles"
+    sid = "ProjectRoles"
     actions = [
       "iam:CreateRole",
       "iam:DeleteRole",
