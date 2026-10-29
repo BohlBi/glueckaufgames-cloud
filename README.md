@@ -26,9 +26,10 @@ Voraussetzungen: AWS-Konto, AWS CLI v2 (angemeldet, z. B. per `aws sso login`), 
    ```bash
    cd bootstrap
    terraform init
-   terraform apply
+   terraform apply -var="enable_github_oidc=false"
    cd ..
    ```
+   `enable_github_oidc=false` lässt die GitHub-Anbindung weg, sie wird nur für die Pipeline gebraucht.
 
 3. **Infrastruktur und Website bereitstellen**
    ```bash
@@ -52,3 +53,7 @@ cd terraform && terraform destroy -var="alert_email=name@example.com"
 ```
 
 Der Bootstrap ist mit `prevent_destroy` geschützt und muss bei Bedarf gesondert entfernt werden.
+
+## Hinweis zum Einsatz von KI
+
+Bei Konzeption, Terraform-Code und Dokumentation wurde der KI-Assistent Claude (Anthropic) unterstützend eingesetzt. Alle Inhalte wurden eigenständig geprüft, getestet und verantwortet.

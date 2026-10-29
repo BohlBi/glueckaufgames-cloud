@@ -9,6 +9,8 @@
 # -----------------------------------------------------------------------------
 
 locals {
+  oidc_count = var.enable_github_oidc ? 1 : 0
+
   github_oidc_url = "token.actions.githubusercontent.com"
   name_prefix     = var.project
   project_arn_s3  = "arn:aws:s3:::${var.project}-*"
@@ -20,6 +22,8 @@ locals {
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
+  count = local.oidc_count
+
   url            = "https://${local.github_oidc_url}"
   client_id_list = ["sts.amazonaws.com"]
 }
@@ -27,12 +31,14 @@ resource "aws_iam_openid_connect_provider" "github" {
 # --- Vertrauensrichtlinien ----------------------------------------------------
 
 data "aws_iam_policy_document" "trust_plan" {
+  count = local.oidc_count
+
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.github.arn]
+      identifiers = [aws_iam_openid_connect_provider.github[0].arn]
     }
 
     condition {
@@ -51,12 +57,14 @@ data "aws_iam_policy_document" "trust_plan" {
 }
 
 data "aws_iam_policy_document" "trust_apply" {
+  count = local.oidc_count
+
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.github.arn]
+      identifiers = [aws_iam_openid_connect_provider.github[0].arn]
     }
 
     condition {
@@ -99,26 +107,34 @@ data "aws_iam_policy_document" "state_access" {
 # --- plan-Rolle (nur lesen) ---------------------------------------------------
 
 resource "aws_iam_role" "plan" {
+  count = local.oidc_count
+
   name                 = "${local.name_prefix}-github-plan"
   description          = "GitHub Actions: terraform plan in Pull Requests (nur lesend)"
-  assume_role_policy   = data.aws_iam_policy_document.trust_plan.json
+  assume_role_policy   = data.aws_iam_policy_document.trust_plan[0].json
   max_session_duration = 3600
 }
 
 resource "aws_iam_role_policy_attachment" "plan_read_only" {
-  role       = aws_iam_role.plan.name
+  count = local.oidc_count
+
+  role       = aws_iam_role.plan[0].name
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
 resource "aws_iam_role_policy" "plan_state" {
+  count = local.oidc_count
+
   name   = "terraform-state"
-  role   = aws_iam_role.plan.id
+  role   = aws_iam_role.plan[0].id
   policy = data.aws_iam_policy_document.state_access.json
 }
 
 # --- apply-Rolle (ändern, nur Projekt-Ressourcen) -----------------------------
 
 data "aws_iam_policy_document" "apply" {
+  count = local.oidc_count
+
   statement {
     sid     = "ProjectBuckets"
     actions = ["s3:*"]
@@ -190,20 +206,62 @@ data "aws_iam_policy_document" "apply" {
 }
 
 resource "aws_iam_role" "apply" {
+  count = local.oidc_count
+
   name                 = "${local.name_prefix}-github-apply"
   description          = "GitHub Actions: terraform apply und Upload nach Merge auf main"
-  assume_role_policy   = data.aws_iam_policy_document.trust_apply.json
+  assume_role_policy   = data.aws_iam_policy_document.trust_apply[0].json
   max_session_duration = 3600
 }
 
 resource "aws_iam_role_policy" "apply_permissions" {
+  count = local.oidc_count
+
   name   = "deploy-project-resources"
-  role   = aws_iam_role.apply.id
-  policy = data.aws_iam_policy_document.apply.json
+  role   = aws_iam_role.apply[0].id
+  policy = data.aws_iam_policy_document.apply[0].json
 }
 
 resource "aws_iam_role_policy" "apply_state" {
+  count = local.oidc_count
+
   name   = "terraform-state"
-  role   = aws_iam_role.apply.id
+  role   = aws_iam_role.apply[0].id
   policy = data.aws_iam_policy_document.state_access.json
+}
+
+# Bestehende Ressourcen behalten ihre Adresse, seit sie abschaltbar sind.
+moved {
+  from = aws_iam_openid_connect_provider.github
+  to   = aws_iam_openid_connect_provider.github[0]
+}
+
+moved {
+  from = aws_iam_role.plan
+  to   = aws_iam_role.plan[0]
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.plan_read_only
+  to   = aws_iam_role_policy_attachment.plan_read_only[0]
+}
+
+moved {
+  from = aws_iam_role_policy.plan_state
+  to   = aws_iam_role_policy.plan_state[0]
+}
+
+moved {
+  from = aws_iam_role.apply
+  to   = aws_iam_role.apply[0]
+}
+
+moved {
+  from = aws_iam_role_policy.apply_permissions
+  to   = aws_iam_role_policy.apply_permissions[0]
+}
+
+moved {
+  from = aws_iam_role_policy.apply_state
+  to   = aws_iam_role_policy.apply_state[0]
 }
