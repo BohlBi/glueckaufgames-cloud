@@ -39,3 +39,9 @@ variable "github_default_branch" {
   type        = string
   default     = "main"
 }
+
+variable "enable_github_oidc" {
+  description = "OIDC-Anbindung und Rollen für GitHub Actions anlegen. Für einen Nachbau ohne Pipeline auf false setzen."
+  type        = bool
+  default     = true
+}
